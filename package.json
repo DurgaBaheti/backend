@@ -1,0 +1,23 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "learning backend from scratch to advance",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DurgaBaheti/backend.git"
+  },
+  "keywords": [
+    "javascript",
+    "backend"
+  ],
+  "author": "Dheeraj Baheti",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DurgaBaheti/backend/issues"
+  },
+  "homepage": "https://github.com/DurgaBaheti/backend#readme"
+}
