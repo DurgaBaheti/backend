@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+      "xabikos.JavaScriptSnippets",
+      "ms-vscode.vscode-typescript-next",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "formulahendry.code-runner"
+    ]
+  }
