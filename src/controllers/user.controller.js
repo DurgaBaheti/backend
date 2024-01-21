@@ -230,7 +230,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         throw new ApiError(201, "field can't be empty!!");
     }
 
-    const User = await User.findById(req.user?._id);
+    const user = await User.findById(req.user?._id);
 
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
     if (!isPasswordCorrect) {
@@ -257,7 +257,6 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
     const { fullname, email } = req.body;
-
     if (!fullname, !email) {
         throw new ApiError(400, "All fields are Required!!");
     }
@@ -280,15 +279,11 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
     const avatarLocalPath = req.file?.path;
-
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is missing!!")
     }
 
-
-
     const avatar = await uploadOnCloudinary(avatarLocalPath)
-
     if (!avatar) {
         throw new ApiError(400, "ERROR while uploading AVATAR on cloudinary")
     }
@@ -312,13 +307,11 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
     const CoverImageLocalPath = req.file?.path;
-
     if (!CoverImageLocalPath) {
         throw new ApiError(400, "cover Image file is missing!!")
     }
 
     const coverImage = await uploadOnCloudinary(CoverImageLocalPath)
-
     if (!coverImage) {
         throw new ApiError(400, "ERROR while uploading CoverImage on cloudinary")
     }
@@ -341,7 +334,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 })
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-    const { username } = req.params;
+    const { username } = req.params; // (req.params) means URL se information le rahe hai
 
     if (!(username?.trim())) {
         throw new ApiError(400, "UserName is missing");
