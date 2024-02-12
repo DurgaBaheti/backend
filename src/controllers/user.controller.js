@@ -3,7 +3,9 @@ import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { Jwt } from "jsonwebtoken";
+// import { Jwt } from "jsonwebtoken";
+import mongoose from "mongoose";
+import { Tweet } from "../models/tweet.model.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -152,9 +154,10 @@ const LoginUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
     User.findByIdAndUpdate(
-        req.user._id,
+        req.user._id, // since user is ALREADY LOGIN.
         {
-            $set: { refreshToken: undefined }
+            $unset: { refreshToken: 1 } // this removes the field from document
+
         },
         {
             new: true
@@ -226,13 +229,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
-    if (!oldPassword || !newPassword) {
-        throw new ApiError(201, "field can't be empty!!");
+    if (!(oldPassword || newPassword)) {
+        throw new ApiError(201, "field cannot be empty!!"); // while sending data from postmann:- raw data, both key and value inside double quotes(i.e. "").
     }
 
     const user = await User.findById(req.user?._id);
 
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
     if (!isPasswordCorrect) {
         throw new ApiError(400, "Invalid Old Password");
     }
@@ -340,58 +343,59 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         throw new ApiError(400, "UserName is missing");
     }
 
-    const channel = await User.Aggregate(
-        {
-            $match: {
-                username: username?.toLowerCase()
-            }
-        },
-        {
-            $lookup: {
-                from: "subscriptions",
-                localField: "_id",
-                foreignField: "channel",
-                as: "subscribers"
+    const channel = await User.aggregate(
+        [
+            {
+                $match: {
+                    username: username?.toLowerCase()
+                }
+            },
+            {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "channel",
+                    as: "subscribers"
 
-            }
-        },
-        {
-            $lookup: {
-                from: "subscriptions",
-                localField: "_id",
-                foreignField: "subscriber",
-                as: "subscribedTo"
-            }
-        },
-        {
-            $addFields: {
-                subscribersCount: {
-                    $size: "$subscribers"
-                },
-                channelsSubsribedToCount: {
-                    $size: "$subsscribedTo"
-                },
-                isSubscribed: {
-                    $cond: {
-                        $if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-                        then: true,
-                        else: false
+                }
+            },
+            {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "subscriber",
+                    as: "subscribedTo"
+                }
+            },
+            {
+                $addFields: {
+                    subscribersCount: {
+                        $size: "$subscribers"
+                    },
+                    channelsSubscribedToCount: {
+                        $size: "$subscribedTo"
+                    },
+                    isSubscribed: {
+                        $cond: {
+                            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                            then: true,
+                            else: false
+                        }
                     }
                 }
-            }
-        },
-        {
-            $project: {
-                username: 1,
-                email: 1,
-                fullName: 1,
-                avatar: 1,
-                coverIcoverImagemage: 1,
-                subscribersCount: 1,
-                channelsSubsribedToCount: 1,
-                isSubscribed: 1
-            }
-        }
+            },
+            {
+                $project: {
+                    username: 1,
+                    email: 1,
+                    fullName: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                    subscribersCount: 1,
+                    channelsSubsribedToCount: 1,
+                    isSubscribed: 1
+                }
+            }]
     )
 
     if (!(channel?.length)) {
@@ -406,10 +410,10 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 })
 
 const getWatchHistory = asyncHandler(async (req, res) => {
-    const user = User.aggregate([
+    const user = await User.aggregate([
         {
             $match: {
-                _id: mongoose.Types.ObjectId(req.user._id)
+                _id: new mongoose.Types.ObjectId(req.user._id)
             }
         },
         {
@@ -428,8 +432,8 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                             pipeline: [
                                 {
                                     $project: {
-                                        username: 1,
                                         fullName: 1,
+                                        username: 1,
                                         avatar: 1
                                     }
                                 }
@@ -449,14 +453,65 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     ])
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200, 
-            user[0].watchHistory,
-            "watch history fetched successfully")
-    )
-}
-)
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user[0].watchHistory,
+                "watch history fetched successfully")
+        )
+})
+
+// const tweets = asyncHandler(async (req, res) => { // verifyJWT LAGANA HAI
+//     // msg from req.body
+//     // msg/content should not be empty ---- (using trim)
+
+
+//     const { content } = req.body;
+//     if (content.trim == 0) {
+//         throw new ApiError(404, "message can't be empty")
+//     }
+
+//     const userTweet = await User.aggregate(
+//         [
+//             {
+//                 $match: {
+//                     _id: new mongoose.Types.ObjectId(req.user._id)
+//                 }
+//             },
+//             {
+//                 $lookup: {
+//                     from: "tweets",
+//                     localField: "_id",
+//                     foreignField: "owner",
+//                     as: "mmm", /// confused about it's usage
+//                 }
+//             },
+//             {
+//                 $set: {
+//                     content: content
+//                 }
+//             },
+//             {
+//                 $project: {
+//                     _id: 1,
+//                     username: 1,
+//                     email: 1,
+//                     content: 1,
+//                 }
+//             }
+//         ]
+//     )
+
+//     return res
+//         .status(200)
+//         .json(
+//             new ApiResponse(
+//                 200,
+//                 userTweet,
+//                 "tweet added succesfully")
+//         )
+// })
 
 
 
@@ -471,5 +526,6 @@ export {
     updateUserAvatar,
     updateUserCoverImage,
     getUserChannelProfile,
-    getWatchHistory
+    getWatchHistory,
+    tweets
 }
