@@ -4,6 +4,7 @@
       "ms-vscode.vscode-typescript-next",
       "dbaeumer.vscode-eslint",
       "esbenp.prettier-vscode",
-      "formulahendry.code-runner"
+      "formulahendry.code-runner",
+      "dalirnet.mongod-config"
     ]
   }

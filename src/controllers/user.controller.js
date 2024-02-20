@@ -1,11 +1,11 @@
+import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 // import { Jwt } from "jsonwebtoken";
-import mongoose from "mongoose";
-import { Tweet } from "../models/tweet.model.js";
+// import { Tweet } from "../models/tweet.model.js";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -28,6 +28,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
 
 const registerUser = asyncHandler(async (req, res) => {
+
     // get user details from frontend
     // validation - not empty
     // check if user already exists: username, email
@@ -75,7 +76,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
 
-    const user = await User.create({
+    const user = await new User.create({//maine new lagaya .........................
         fullName,
         avatar: avatar.url,
         coverImage: coverImage?.url || "",
@@ -462,57 +463,6 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         )
 })
 
-// const tweets = asyncHandler(async (req, res) => { // verifyJWT LAGANA HAI
-//     // msg from req.body
-//     // msg/content should not be empty ---- (using trim)
-
-
-//     const { content } = req.body;
-//     if (content.trim == 0) {
-//         throw new ApiError(404, "message can't be empty")
-//     }
-
-//     const userTweet = await User.aggregate(
-//         [
-//             {
-//                 $match: {
-//                     _id: new mongoose.Types.ObjectId(req.user._id)
-//                 }
-//             },
-//             {
-//                 $lookup: {
-//                     from: "tweets",
-//                     localField: "_id",
-//                     foreignField: "owner",
-//                     as: "mmm", /// confused about it's usage
-//                 }
-//             },
-//             {
-//                 $set: {
-//                     content: content
-//                 }
-//             },
-//             {
-//                 $project: {
-//                     _id: 1,
-//                     username: 1,
-//                     email: 1,
-//                     content: 1,
-//                 }
-//             }
-//         ]
-//     )
-
-//     return res
-//         .status(200)
-//         .json(
-//             new ApiResponse(
-//                 200,
-//                 userTweet,
-//                 "tweet added succesfully")
-//         )
-// })
-
 
 
 export {
@@ -527,5 +477,4 @@ export {
     updateUserCoverImage,
     getUserChannelProfile,
     getWatchHistory,
-    tweets
 }
