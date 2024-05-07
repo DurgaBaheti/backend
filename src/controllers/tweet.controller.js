@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -16,31 +16,22 @@ const createTweet = asyncHandler(async (req, res) => {
     const tweetUser = await User.findById(req.user._id).select( // req.user._id isliye use kar paaya kyunki verify JWT lagaya hua hai.
         "-refreshToken -password"
     )
+    console.log(tweetUser);
+
+
     if (!tweetUser) {
         throw new ApiError(404, "something went wrong while fetching user details!!")
     }
     const tweet = await Tweet.create({
         content,
-        owner: tweetUser
+        owner: tweetUser._id
     })
     if (!tweet) {
-        throw new ApiError(500, "something went wrong while uploading tweet")
+        throw new ApiError(500, "something went wrong while uploading tweet!!")
     }
     return res.status(200).json(
         new ApiResponse(200, tweet, "Tweet Addedd Successfully")
     )
-})
-
-const getUserTweets = asyncHandler(async (req, res) => {
-    const tweets = await Tweet.find({
-        owner: req.user._id
-    }).select("-owner")
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(200, tweets, "Tweets fetched Sucessfully")
-        )
-
 })
 
 const updateTweet = asyncHandler(async (req, res) => {
@@ -57,9 +48,9 @@ const updateTweet = asyncHandler(async (req, res) => {
                 // but no need it automatically updates
             }
         },
-        {new : true}
+        { new: true }
     ).select("-owner")
-    if(!updatedTweet) {
+    if (!updatedTweet) {
         throw new ApiError(404, "Tweet Not Found!!")
     }
     return res
@@ -69,20 +60,38 @@ const updateTweet = asyncHandler(async (req, res) => {
         )
 })
 
-const deleteTweet = asyncHandler(async (req, res) => {
-    const { _id } = req.body
-    const deleted = await Tweet.findByIdAndDelete(_id).select("-owner")
-    if(!deleted) {
-        throw new ApiError(404, "Tweet Not FOund!!")
-    }
-
+const getUserTweets = asyncHandler(async (req, res) => {
+    const tweets = await Tweet.find({
+        owner: req.user._id
+    }).select("-owner -__v")
     return res
         .status(200)
         .json(
-            new ApiResponse(
-                200, deleted, "Tweet Deleted Successfully"
-            )
+            new ApiResponse(200, tweets, "Tweets fetched Sucessfully.")
         )
+
+})
+
+// -----------------------err-(Tweet not found!!)--------------------------------------
+const deleteTweet = asyncHandler(async (req, res) => {
+    const { _id } = req.body
+    const tweetToDelete = await Tweet.findById(_id);
+    if (tweetToDelete?.owner === req.user._id) {
+        const deletedTweet = await Tweet.findByIdAndDelete(_id).select("_owner")
+        if (deleteTweet) {
+            return res
+                .status(200)
+                .json(
+                    new ApiResponse(
+                        200, deletedTweet, "Tweet Deleted Successfully"
+                    )
+                )
+        }
+    } else {
+        throw new ApiError(404, "Tweet not found!!")
+    }
+
+    return;
 })
 
 export {

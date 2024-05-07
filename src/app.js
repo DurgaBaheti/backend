@@ -18,10 +18,12 @@ app.use(cookieParser())
 //routes import
 import userRouter from './routes/user.routes.js'
 import tweetRouter from "./routes/tweet.routes.js"
+// import healthRouter from "./routes/healthCheck.routes.js"
 
 //routes declaration
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/tweets", tweetRouter)
+// app.use("/api/v1/healths", healthRouter)
 // http://localhost:8001/api/v1/users/register
 
 export { app }
