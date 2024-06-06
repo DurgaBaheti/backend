@@ -1,10 +1,7 @@
-import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Tweet } from "../models/tweet.model.js";
-import { User } from "../models/user.model.js";
-
 const createTweet = asyncHandler(async (req, res) => {
     const { content } = req.body;
     if (content.trim === "") {
@@ -13,18 +10,9 @@ const createTweet = asyncHandler(async (req, res) => {
     if (content > 700) {
         throw new ApiError(400, "message length should not exceed 700") // 400 status code unprocesseble
     }
-    const tweetUser = await User.findById(req.user._id).select( // req.user._id isliye use kar paaya kyunki verify JWT lagaya hua hai.
-        "-refreshToken -password"
-    )
-    console.log(tweetUser);
-
-
-    if (!tweetUser) {
-        throw new ApiError(404, "something went wrong while fetching user details!!")
-    }
     const tweet = await Tweet.create({
         content,
-        owner: tweetUser._id
+        owner: req.user._id
     })
     if (!tweet) {
         throw new ApiError(500, "something went wrong while uploading tweet!!")
@@ -74,11 +62,13 @@ const getUserTweets = asyncHandler(async (req, res) => {
 
 // -----------------------err-(Tweet not found!!)--------------------------------------
 const deleteTweet = asyncHandler(async (req, res) => {
-    const { _id } = req.body
+    const { _id } = req.body // req.params
     const tweetToDelete = await Tweet.findById(_id);
-    if (tweetToDelete?.owner === req.user._id) {
-        const deletedTweet = await Tweet.findByIdAndDelete(_id).select("_owner")
-        if (deleteTweet) {
+    console.log(tweetToDelete);
+    console.log(tweetToDelete.owner == req.user._id);
+    if (tweetToDelete.owner == req.user._id) {
+        const deletedTweet = await Tweet.findByIdAndDelete(_id).select("-owner")
+        if (deletedTweet) {
             return res
                 .status(200)
                 .json(

@@ -56,30 +56,31 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User with email or username already exists")
     }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
+    // console.log(req.files?.avatar);
+    // const avatarLocalPath = req.files?.avatar[0]?.path;
 
-    let coverImageLocalPath;
-    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-        coverImageLocalPath = req.files.coverImage[0].path
-    }
-
-
-    if (!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file is required")
-    }
-
-    const avatar = await uploadOnCloudinary(avatarLocalPath)
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
-
-    if (!avatar) {
-        throw new ApiError(400, "Avatar file is required")
-    }
+    // let coverImageLocalPath;
+    // if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+    //     coverImageLocalPath = req.files.coverImage[0].path
+    // }
 
 
-    const user = await new User.create({//maine new lagaya .........................
+    // if (!avatarLocalPath) {
+    //     throw new ApiError(400, "Avatar file is required")
+    // }
+
+    // const avatar = await uploadOnCloudinary(avatarLocalPath)
+    // const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+    // if (!avatar) {
+    //     throw new ApiError(400, "Avatar file is required")
+    // }
+
+
+    const user = await User.create({//maine new lagaya .........................
         fullName,
-        avatar: avatar.url,
-        coverImage: coverImage?.url || "",
+        // avatar: avatar.url,
+        // coverImage: coverImage?.url || "",
         email,
         password,
         username: username.toLowerCase()
@@ -121,7 +122,7 @@ const LoginUser = asyncHandler(async (req, res) => {
         throw new ApiError(404, "user does not exist");
     }
 
-    const isPasswordValid = await user.isPasswordCorrect(password);
+    const isPasswordValid = await user.isPasswordCorrect(String(password));
     if (!isPasswordValid) {
         throw new ApiError(404, "PASSWORD is wrong");
     }
